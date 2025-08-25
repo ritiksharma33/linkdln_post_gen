@@ -4,6 +4,9 @@ import './App.css';
 // --- SVG Icons ---
 const CopyIcon = () => ( <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fillRule="evenodd" d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V2Zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H6Z"/><path d="M2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1H2Z"/></svg> );
 const SparkleIcon = () => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3L9.5 8.5L4 11l5.5 2.5L12 19l2.5-5.5L20 11l-5.5-2.5L12 3z" /><path d="M5 3v4h4" /><path d="M19 17v4h-4" /></svg> );
+// --- ADDED THIS ICON ---
+const NewPostIcon = () => ( <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fillRule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z"/><path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/></svg> );
+
 
 function App() {
   // --- State Management ---
@@ -37,7 +40,6 @@ function App() {
     }
 
     try {
-      // --- THIS IS THE ONLY LINE THAT WAS CHANGED ---
       const response = await fetch(`${process.env.REACT_APP_API_URL}/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -76,6 +78,16 @@ function App() {
         setTimeout(() => setCopySuccess(''), 2500);
       });
     }
+  };
+
+  // --- ADDED THIS FUNCTION ---
+  const handleReset = () => {
+    setTopic('');
+    setPost('');
+    setError(null);
+    setFollowUpQuestions([]);
+    setUserAnswers({});
+    setCopySuccess('');
   };
 
   return (
@@ -141,12 +153,19 @@ function App() {
         )}
         {post && (
           <div className="post-output-container">
+            {/* --- MODIFIED THIS SECTION --- */}
             <div className="post-output-header">
               <h2>Your Generated Post</h2>
-              <button onClick={copyToClipboard} className="copy-button">
-                <CopyIcon /> {copySuccess || 'Copy'}
-              </button>
+              <div className="button-group">
+                <button onClick={copyToClipboard} className="copy-button">
+                  <CopyIcon /> {copySuccess || 'Copy'}
+                </button>
+                <button onClick={handleReset} className="new-post-button">
+                  <NewPostIcon /> Generate New
+                </button>
+              </div>
             </div>
+            {/* --- END OF MODIFIED SECTION --- */}
             <div className="post-output">
               <p style={{ whiteSpace: 'pre-wrap' }}>{post}</p>
             </div>
