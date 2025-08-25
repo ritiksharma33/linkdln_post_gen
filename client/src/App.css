@@ -201,37 +201,3 @@ input[type="range"]::-moz-range-thumb {
   .main-content { padding: 2rem 1.5rem; }
   .app-header h1 { font-size: 2rem; }
 }
-/* Add this to your existing App.css file */
-
-/* Aligns the "Your Generated Post" title and the buttons on opposite ends */
-.post-output-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-
-/* Creates a group for the buttons and adds spacing between them */
-.button-group {
-  display: flex;
-  gap: 0.5rem; /* Adjust space between buttons */
-}
-
-/* Style for the new button */
-.secondary-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border: 1px solid #dcdcdc;
-  border-radius: 8px;
-  background-color: #f0f0f0; /* A lighter, secondary color */
-  color: #333;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.secondary-button:hover {
-  background-color: #e0e0e0; /* Slightly darker on hover */
-}
