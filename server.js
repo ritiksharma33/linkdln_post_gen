@@ -1,0 +1,93 @@
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
+dotenv.config();
+const app = express();
+const port = process.env.PORT || 8080;
+
+app.use(cors({ origin: 'http://localhost:3000' }));
+app.use(express.json());
+
+if (!process.env.GEMINI_API_KEY) {
+  console.error("Error: GEMINI_API_KEY is not defined in your .env file.");
+  process.exit(1);
+}
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+app.post('/generate', async (req, res) => {
+  const { topic, details, emotion, urgency } = req.body;
+
+  if (!topic) {
+    return res.status(400).json({ message: 'Topic is required.' });
+  }
+
+  try {
+    if (details) {
+      // This part for generating the final post remains the same
+      const personaPrompt = `
+        Act as a world-class persuasion expert and narrative strategist...
+        User's Core Topic: "${topic}"
+        User's Detailed Answers: ${JSON.stringify(details, null, 2)}
+        Emotionality Level: ${emotion}/100.
+        Urgency/FOMO Level: ${urgency}/100.
+        ...Generate the post...
+      `;
+      const result = await model.generateContent(personaPrompt);
+      const response = await result.response;
+      return res.status(200).json({ post: response.text() });
+    }
+
+    // --- STEP 1: Generate CONTEXT-AWARE follow-up questions ---
+    const analysisPrompt = `
+      A user wants to write a LinkedIn post, story, or presentation script about the following topic: "${topic}".
+      Analyze the user's topic to understand its context (e.g., is it a personal achievement, a technical explanation, a project launch?).
+      Based on your analysis, generate 3 to 5 essential and specific follow-up questions that will help the user provide the necessary details to build a compelling narrative.
+      
+      IMPORTANT: Your response MUST contain a valid JSON object with a single key "questions", which is an array of strings. Do not add any other text or markdown.
+      Example: {"questions": ["What was your specific role?", "What was the biggest challenge?"]}
+    `;
+    const result = await model.generateContent(analysisPrompt);
+    const response = await result.response;
+    const textResponse = response.text();
+
+    // --- NEW ROBUST PARSING LOGIC ---
+    try {
+      // Find the JSON part of the string using a regular expression
+      const jsonMatch = textResponse.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error("No valid JSON object found in the AI response.");
+      }
+      
+      const jsonString = jsonMatch[0];
+      const questionsObject = JSON.parse(jsonString);
+
+      if (questionsObject && Array.isArray(questionsObject.questions)) {
+        res.status(200).json({ followUpQuestions: questionsObject.questions });
+      } else {
+        throw new Error("JSON structure is valid, but the 'questions' array is missing.");
+      }
+    } catch (parseError) {
+      console.error("Failed to parse AI response, using fallback. Error:", parseError.message);
+      console.error("Original AI Response:", textResponse);
+      // Fallback: If parsing still fails, use the generic questions.
+      res.status(200).json({ 
+          followUpQuestions: [
+              "Could you please provide more specific details about this?", 
+              "What was your main role or contribution?", 
+              "What was the most important lesson you learned?"
+          ] 
+      });
+    }
+
+  } catch (error) {
+    console.error('Error in /generate endpoint:', error);
+    res.status(500).json({ message: 'Failed to generate post. Please check the server logs.' });
+  }
+});
+
+app.listen(port, () => {
+  console.log(`✨ Narrative Engine server is running on http://localhost:${port}`);
+});
