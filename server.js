@@ -44,6 +44,11 @@ app.post('/generate', async (req, res) => {
         Emotionality Level: ${emotion}/100.
         Urgency/FOMO Level: ${urgency}/100.
         ...Generate the post...
+          IMPORTANT INSTRUCTIONS:
+  1. Your response must ONLY be the text for the LinkedIn post itself.
+  2. Do NOT include any commentary, analysis, or explanations like "Why this works."
+  3. Do NOT add any introductory text like "Here is the post you requested:".
+  4. Start the response directly with the post's headline and end it with the hashtags.
       `;
       const result = await model.generateContent(personaPrompt);
       const response = await result.response;
