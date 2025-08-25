@@ -2,12 +2,21 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+// --- REMOVED --- path and fileURLToPath are no longer needed.
 
 dotenv.config();
 const app = express();
 const port = process.env.PORT || 8080;
 
-app.use(cors({ origin: 'http://localhost:3000' }));
+// --- REMOVED --- The __filename and __dirname setup is no longer needed.
+
+// --- IMPORTANT CORS UPDATE ---
+// This is more secure. It only allows your Vercel app to make requests.
+// You will get your Vercel URL after you deploy the frontend there.
+app.use(cors({
+  origin: "https://your-frontend-app-name.vercel.app" // IMPORTANT: Replace with your actual Vercel URL
+}));
+
 app.use(express.json());
 
 if (!process.env.GEMINI_API_KEY) {
@@ -17,6 +26,8 @@ if (!process.env.GEMINI_API_KEY) {
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
+
+// --- YOUR API LOGIC (UNCHANGED) ---
 app.post('/generate', async (req, res) => {
   const { topic, details, emotion, urgency } = req.body;
 
@@ -26,7 +37,6 @@ app.post('/generate', async (req, res) => {
 
   try {
     if (details) {
-      // This part for generating the final post remains the same
       const personaPrompt = `
         Act as a world-class persuasion expert and narrative strategist...
         User's Core Topic: "${topic}"
@@ -40,7 +50,6 @@ app.post('/generate', async (req, res) => {
       return res.status(200).json({ post: response.text() });
     }
 
-    // --- STEP 1: Generate CONTEXT-AWARE follow-up questions ---
     const analysisPrompt = `
       A user wants to write a LinkedIn post, story, or presentation script about the following topic: "${topic}".
       Analyze the user's topic to understand its context (e.g., is it a personal achievement, a technical explanation, a project launch?).
@@ -53,9 +62,7 @@ app.post('/generate', async (req, res) => {
     const response = await result.response;
     const textResponse = response.text();
 
-    // --- NEW ROBUST PARSING LOGIC ---
     try {
-      // Find the JSON part of the string using a regular expression
       const jsonMatch = textResponse.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
         throw new Error("No valid JSON object found in the AI response.");
@@ -72,7 +79,6 @@ app.post('/generate', async (req, res) => {
     } catch (parseError) {
       console.error("Failed to parse AI response, using fallback. Error:", parseError.message);
       console.error("Original AI Response:", textResponse);
-      // Fallback: If parsing still fails, use the generic questions.
       res.status(200).json({ 
           followUpQuestions: [
               "Could you please provide more specific details about this?", 
@@ -87,7 +93,13 @@ app.post('/generate', async (req, res) => {
     res.status(500).json({ message: 'Failed to generate post. Please check the server logs.' });
   }
 });
+// --- END OF YOUR API LOGIC ---
+
+
+// --- REMOVED --- The section that served the React app is now gone.
+
 
 app.listen(port, () => {
-  console.log(`✨ Narrative Engine server is running on http://localhost:${port}`);
+  // A more accurate log message for an API server
+  console.log(`✨ API server is listening on port ${port}`);
 });
