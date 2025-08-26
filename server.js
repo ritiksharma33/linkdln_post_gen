@@ -14,7 +14,7 @@ const port = process.env.PORT || 8080;
 // This is more secure. It only allows your Vercel app to make requests.
 // You will get your Vercel URL after you deploy the frontend there.
 app.use(cors({
-  origin: "https://linkdln-post1-3mm9mv8zx-ritiksharma33s-projects.vercel.app"
+  origin: "https://linkdln-post1-ritiksharma33s-projects.vercel.app/"
 }));
 
 app.use(express.json());
